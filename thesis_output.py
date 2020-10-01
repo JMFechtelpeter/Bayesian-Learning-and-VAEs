@@ -10,6 +10,9 @@ import matplotlib.pyplot as plt
 import hidden_markov_lib2 as hm
 #from matplotlib import rc
 
+prior = np.zeros(16)
+prior[0] = 1
+
 plt.style.use('seaborn')
 plt.rcParams['text.usetex'] = False
 plt.rcParams['svg.fonttype'] = 'none'
@@ -20,7 +23,7 @@ Plot 1: Sanity Check: lernen die Algorithmen einen Pfad, den sie ganz oft zu Ges
 plt.rcParams['figure.figsize'] = (15,5)
 
 while True:
-    G = hm.gridworld(4,4,p_trans=0.75,p_observe=0.75)
+    G = hm.gridworld(4,4,p_trans=0.75,p_observe=0.75,prior=prior)
     
     G.explore(10)
     G.O = G.O*100
@@ -81,8 +84,6 @@ Plot 2: F im Verlauf einer echten Lern-Session, p_observation = p_transition = 0
 """
 
 plt.rcParams['figure.figsize'] = (15,5)
-prior = np.zeros(16)
-prior[0] = 1
 
 while True:
 
@@ -154,7 +155,7 @@ while True:
     for pt in p_trans:
         for po in p_observe:
     
-            G = hm.gridworld(4,4,p_trans=pt,p_observe=po)
+            G = hm.gridworld(4,4,p_trans=pt,p_observe=po,prior=prior)
             
             for session in range(100):
                 G.explore(10,reset=True)
@@ -206,18 +207,18 @@ while True:
 Plot 4: Rechenzeit in Abhängigkeit von p_observation = 0.5, 0.75, 1, p_transition = 0.5, 0.75, 1
 """
 
-plt.rcParams['figure.figsize'] = (15,10)
+plt.rcParams['figure.figsize'] = (5,5)
 
 while True:
-    p_trans = np.array([0.5,0.75,1])
-    p_observe = np.array([0.5,0.75,1])
+    p_trans = np.array([0.75])
+    p_observe = np.array([0.75])
     plots = []
     
     index = 1
     for pt in p_trans:
         for po in p_observe:
     
-            G = hm.gridworld(4,4,p_trans=pt,p_observe=po)
+            G = hm.gridworld(4,4,p_trans=pt,p_observe=po,prior=prior)
             
             for session in range(100):
                 G.explore(10,reset=True)
@@ -232,7 +233,7 @@ while True:
             duration[4], _ = G.measure_perf(G.VAE_bp,stepwise=False,VAE_type='MC')
             duration[5], _ = G.measure_perf(G.VAE_bp,stepwise=True,VAE_type='MC')
             
-            plots.append(plt.subplot(3,3,index))
+            plots.append(plt.subplot(p_trans.size,p_observe.size,index))
             plt.bar(('BL1','BL4','VF','VFS','VM','VMS'),duration,color=['orange','red','green','blue','magenta','purple'])
             plt.title('p_trans='+str(pt)+' p_obs='+str(po))
             
@@ -264,14 +265,14 @@ cmap = 'rainbow'
 
 while True:
     
-    G = hm.gridworld(4,4,p_trans=0.75,p_observe=1,prior=prior)
+    G = hm.gridworld(4,4,p_trans=0.75,p_observe=0.75)
     
     for session in range(100):
         G.explore(6,reset=True)
         
     true_p = G.bp_belief(O=G.O[-1])
-    bayesian_q = G.learning_bp(O=[G.O[-1]],iterations=4)
-    VAE_q = G.VAE_bp(O=G.O[-1],VAE_type='full',stepwise=True)
+    bayesian_q = G.learning_bp(O=G.O,iterations=4)
+    VAE_q = G.VAE_bp(O=G.O,VAE_type='full',stepwise=True)
 
     axes = []
     fig = plt.figure()
